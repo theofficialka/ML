@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bell,
@@ -78,8 +79,10 @@ export default function LobbyPage() {
   const [friends, setFriends] = useState<FriendStatus[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [queueState, setQueueState] = useState<QueueState>('idle');
+  const router = useRouter();
+  const [matchCountdown, setMatchCountdown] = useState(3);
   const [prefs, setPrefs] = useState<MatchmakingPreferences>({
-    subject: 'Math',
+    subject: 'Mixed',
     format: '1v1',
     matchLength: 'Standard',
     ranked: true,
@@ -100,6 +103,15 @@ export default function LobbyPage() {
     () => ((data?.rank.skillRating ?? 0) / (data?.rank.nextRankTarget ?? 1)) * 100,
     [data],
   );
+
+  useEffect(() => {
+    if (queueState !== 'found') return;
+    setMatchCountdown(3);
+    const t1 = setTimeout(() => setMatchCountdown(2), 1000);
+    const t2 = setTimeout(() => setMatchCountdown(1), 2000);
+    const t3 = setTimeout(() => router.push('/match/ranked-demo'), 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [queueState, router]);
 
   if (!data) return <div className="p-10 text-lg">Loading lobby...</div>;
 
@@ -239,8 +251,9 @@ export default function LobbyPage() {
         </aside>
       </main>
 
-      <AnimatePresence>{queueState === 'selecting' && <div className="fixed inset-0 z-40 grid place-items-center bg-black/65 p-4"><motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-xl rounded-2xl border border-blue-400/30 bg-slate-950/95 p-6 shadow-[0_0_50px_rgba(59,130,246,.2)]"><h3 className="text-xl font-semibold">Find a Ranked Match</h3><p className="mt-1 text-sm text-slate-400">Ranked matches affect your Skill Rating. Accuracy is weighted most heavily, with speed as a secondary factor.</p><div className="mt-4 grid gap-3"><select className="rounded-lg border border-slate-700 bg-slate-900 p-3" value={prefs.subject} onChange={(e) => setPrefs({ ...prefs, subject: e.target.value as any })}><option>Math</option><option>Reading & Writing</option><option>Mixed</option></select><select className="rounded-lg border border-slate-700 bg-slate-900 p-3" value={prefs.format} onChange={(e) => setPrefs({ ...prefs, format: e.target.value as any })}><option>1v1</option><option disabled>Team Match (Coming Soon)</option></select><select className="rounded-lg border border-slate-700 bg-slate-900 p-3" value={prefs.matchLength} onChange={(e) => setPrefs({ ...prefs, matchLength: e.target.value as any })}><option>Sprint</option><option>Standard</option><option>Full Arena</option></select></div><div className="mt-5 flex gap-2"><button onClick={async () => { setQueueState('searching'); await startRankedQueue(prefs); }} className="rounded-lg bg-blue-600 px-4 py-2.5 font-medium hover:bg-blue-500">Start Queue</button><button onClick={() => setQueueState('idle')} className="rounded-lg border border-slate-600 px-4 py-2.5">Cancel</button></div></motion.div></div>}</AnimatePresence>
-      <AnimatePresence>{queueState === 'searching' && <div className="fixed inset-0 z-40 grid place-items-center bg-black/65 p-4"><div className="w-full max-w-md rounded-2xl border border-blue-400/25 bg-slate-950 p-6 text-center"><p className="text-lg font-medium animate-pulse">Searching for match...</p><p className="mt-2 text-sm text-slate-400">{prefs.subject} • {prefs.format} • {prefs.matchLength} • ETA 00:35</p><button className="mt-5 rounded-lg border border-slate-600 px-4 py-2.5" onClick={() => setQueueState('cancelled')}>Cancel Queue</button></div></div>}</AnimatePresence>
+      <AnimatePresence>{queueState === 'selecting' && <div className="fixed inset-0 z-40 grid place-items-center bg-black/65 p-4"><motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-xl rounded-2xl border border-blue-400/30 bg-slate-950/95 p-6 shadow-[0_0_50px_rgba(59,130,246,.2)]"><h3 className="text-xl font-semibold">Find a Ranked Match</h3><p className="mt-1 text-sm text-slate-400">Ranked matches affect your Skill Rating. Accuracy is weighted most heavily, with speed as a secondary factor.</p><div className="mt-4 grid gap-3"><select className="rounded-lg border border-slate-700 bg-slate-900 p-3" value={prefs.subject} onChange={(e) => setPrefs({ ...prefs, subject: e.target.value as any })}><option>Math</option><option>Reading & Writing</option><option>Mixed</option></select><select className="rounded-lg border border-slate-700 bg-slate-900 p-3" value={prefs.format} onChange={(e) => setPrefs({ ...prefs, format: e.target.value as any })}><option>1v1</option><option disabled>Team Match (Coming Soon)</option></select><select className="rounded-lg border border-slate-700 bg-slate-900 p-3" value={prefs.matchLength} onChange={(e) => setPrefs({ ...prefs, matchLength: e.target.value as any })}><option>Sprint</option><option>Standard</option><option>Full Arena</option></select></div><div className="mt-5 flex gap-2"><button onClick={async () => { setQueueState('searching'); await startRankedQueue(prefs); setTimeout(()=>setQueueState('found'),2600); }} className="rounded-lg bg-blue-600 px-4 py-2.5 font-medium hover:bg-blue-500">Start Queue</button><button onClick={() => setQueueState('idle')} className="rounded-lg border border-slate-600 px-4 py-2.5">Cancel</button></div></motion.div></div>}</AnimatePresence>
+      <AnimatePresence>{queueState === 'searching' && <div className="fixed inset-0 z-40 grid place-items-center bg-black/65 p-4"><div className="w-full max-w-md rounded-2xl border border-blue-400/25 bg-slate-950 p-6 text-center"><p className="text-lg font-medium animate-pulse">Searching for an opponent...</p><p className="mt-2 text-sm text-slate-400">Ranked {prefs.format} • {prefs.subject} • {prefs.matchLength} — {prefs.matchLength==='Sprint'?'5':'10'} questions</p><p className="text-xs text-blue-300 mt-1">Estimated wait: &lt; 20 seconds</p><button className="mt-5 rounded-lg border border-slate-600 px-4 py-2.5" onClick={() => setQueueState('cancelled')}>Cancel Queue</button></div></div>}</AnimatePresence>
+      <AnimatePresence>{queueState === 'found' && <div className="fixed inset-0 z-40 grid place-items-center bg-black/70 p-4"><div className="w-full max-w-2xl rounded-2xl border border-blue-300/35 bg-slate-950 p-6"><h3 className="text-center text-2xl font-semibold text-blue-200">MATCH FOUND</h3><div className="my-5 grid grid-cols-[1fr_auto_1fr] items-center gap-4"><div className="text-center"><p className="text-lg">ScoreSeeker</p><p className="text-sm text-violet-300">Diamond III</p><p className="text-xs text-slate-400">2,487 SR</p></div><div className="text-xl text-slate-300">VS</div><div className="text-center"><p className="text-lg">QuantKnight</p><p className="text-sm text-violet-300">Diamond II</p><p className="text-xs text-slate-400">2,526 SR</p></div></div><p className="text-center text-sm text-slate-300">Ranked 1v1 • {prefs.subject} • 10 Questions</p><p className="mt-3 text-center text-blue-300">Match begins in {matchCountdown}...</p></div></div>}</AnimatePresence>
       <AnimatePresence>{showCustom && <div className="fixed inset-0 z-40 grid place-items-center bg-black/65 p-4"><div className="w-full max-w-md rounded-2xl border border-amber-400/25 bg-slate-950 p-6"><h3 className="text-xl font-semibold">Create Custom Match</h3><p className="mt-2 text-sm text-slate-400">Custom lobbies will connect to backend multiplayer sessions soon.</p><button className="mt-5 rounded-lg border border-slate-600 px-4 py-2.5" onClick={() => setShowCustom(false)}>Close</button></div></div>}</AnimatePresence>
       <AnimatePresence>{joinTarget && <div className="fixed inset-0 z-40 grid place-items-center bg-black/65 p-4"><div className="w-full max-w-md rounded-2xl border border-blue-400/25 bg-slate-950 p-6"><h3 className="text-xl font-semibold">Join {joinTarget.mode}?</h3><p className="mt-2 text-sm text-slate-400">Multiplayer connection will be attached during backend integration.</p><div className="mt-5 flex gap-2"><button className="rounded-lg bg-blue-600 px-4 py-2.5" onClick={() => setJoinTarget(undefined)}>Confirm</button><button className="rounded-lg border border-slate-600 px-4 py-2.5" onClick={() => setJoinTarget(undefined)}>Cancel</button></div></div></div>}</AnimatePresence>
     </div>
