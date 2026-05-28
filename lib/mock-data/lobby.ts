@@ -2,7 +2,7 @@ import { Announcement, DailyChallenge, FriendStatus, GameMode, OpenMatch, RankPr
 export const user: UserProfile = { id:'u1', username:'ScoreSeeker', avatarUrl:'', currentRank:'Diamond III', skillRating:2487, seasonLevel:27, xp:650, xpToNextLevel:1000 };
 export const rank: RankProgress = { currentRank:'Diamond III', skillRating:2487, nextRank:'Diamond II', nextRankTarget:2800 };
 export const season: SeasonProgress = { seasonLabel:'Season 5', passName:'Season Pass', level:27, xp:650, xpToNextLevel:1000 };
-export const challenge: DailyChallenge = { id:'c1', text:'Get 15 questions correct in any mode', progress:7, goal:15, timeRemaining:'18h 24m remaining', xpReward:250, tokenReward:40 };
+export const challenge: DailyChallenge = { id:'c1', text:'Get 15 questions correct in any mode', progress:7, goal:15, timeRemaining:'18h 24m remaining', xpReward:250, tokenReward:100 };
 export const modes: GameMode[] = [
 {id:'ranked',name:'Ranked Match',description:'Compete in live SAT matches and climb the leaderboard.',subjectAvailability:['Math','Reading & Writing','Mixed'],playerCount:1248,accent:'blue',ranked:true},
 {id:'practice',name:'Practice Match',description:'Hone your skills with unranked practice matches.',subjectAvailability:['Math','Reading & Writing','Mixed'],playerCount:862,accent:'green',ranked:false},
